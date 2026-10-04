@@ -1,0 +1,90 @@
+name: Build
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Gadgetoid/llvm-project commit, branch or tag to build
+        default: wince-sh3
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-14
+            platform: macos-arm64
+          - os: ubuntu-22.04
+            platform: linux-x86_64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Read the LLVM ref
+        id: ref
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "ref=${{ inputs.ref }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "ref=$(cat LLVM_REF)" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: actions/checkout@v7
+        with:
+          repository: Gadgetoid/llvm-project
+          ref: ${{ steps.ref.outputs.ref }}
+          path: llvm-project
+          fetch-depth: 1
+
+      - name: Install build tools (macOS)
+        if: runner.os == 'macOS'
+        run: brew install ninja
+
+      - name: Install build tools (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build
+
+      - name: Configure
+        run: scripts/configure.sh "$GITHUB_WORKSPACE/llvm-project" "$GITHUB_WORKSPACE/build"
+
+      - name: Build
+        run: scripts/build.sh "$GITHUB_WORKSPACE/build"
+
+      - name: Package
+        run: |
+          name="velo-llvm-${{ github.ref_type == 'tag' && github.ref_name || 'dev' }}-${{ matrix.platform }}"
+          mkdir -p dist
+          scripts/package.sh "$GITHUB_WORKSPACE/build" "$GITHUB_WORKSPACE/llvm-project" "$name" "$GITHUB_WORKSPACE/dist"
+          (cd dist && shasum -a 256 "$name.tar.xz" > "$name.tar.xz.sha256")
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: velo-llvm-${{ matrix.platform }}
+          path: |
+            dist/*.tar.xz
+            dist/*.sha256
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v7
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "${{ github.ref_name }}" dist/* --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --notes "LLVM with SuperH (SH-3, Windows CE) and MIPS, built from Gadgetoid/llvm-project at $(cat LLVM_REF 2>/dev/null || echo the tagged ref). See README."
