@@ -20,6 +20,11 @@ link llvm-objcopy llvm-strip
 link llvm-readobj llvm-readelf
 link llvm-symbolizer llvm-addr2line
 cp -R "$build_dir/lib/clang" "$staging/lib/clang"
+mkdir -p "$staging/include/c++" "$staging/share/libcxx"
+cp -R "$source_dir/libcxx/include" "$staging/include/c++/v1"
+find "$staging/include/c++/v1" \( -name "*.in" -o -name CMakeLists.txt \) -delete
+cp -R "$source_dir/libcxx/src" "$staging/share/libcxx/src"
+cp "$source_dir/libcxx/LICENSE.TXT" "$staging/share/libcxx/LICENSE.TXT"
 cp "$source_dir/llvm/LICENSE.TXT" "$staging/LICENSE.TXT"
 commit="$(git -C "$source_dir" rev-parse HEAD)"
 cat > "$staging/README.txt" <<README
@@ -33,6 +38,9 @@ Tools: clang, ld.lld, llvm-ar, llvm-ranlib, llvm-rc, llvm-objcopy,
 llvm-strip, llvm-objdump, llvm-readobj, llvm-readelf, llvm-nm, llvm-size,
 llvm-symbolizer, llvm-addr2line, llvm-mc.
 
+libc++'s headers are in include/c++/v1 and its sources in share/libcxx/src, without a
+__config_site: jornada-72x-tools supplies its own and builds the parts it uses.
+
 LLVM is under the Apache License v2.0 with LLVM Exceptions; see LICENSE.TXT.
 README
 for tool in "$staging"/bin/*; do
@@ -44,6 +52,8 @@ printf '#include <stdarg.h>\nint pick(int count, ...) { va_list list; va_start(l
 "$staging/bin/clang" --target=armv4-unknown-none-wince -mcpu=strongarm -ffreestanding -c "$output_dir/check.c" -o "$output_dir/check.o"
 "$staging/bin/llvm-readelf" -h "$output_dir/check.o" | grep -q "ARM"
 "$staging/bin/ld.lld" --version > /dev/null
+test -f "$staging/include/c++/v1/__config"
+test -f "$staging/share/libcxx/src/string.cpp"
 rm -f "$output_dir/check.c" "$output_dir/check.o"
 tar -C "$output_dir" -cJf "$output_dir/$name.tar.xz" "$name"
 echo "$output_dir/$name.tar.xz"

@@ -15,7 +15,7 @@ The MIPS target doesn't need this: velo-toolchain uses Homebrew's or the distrib
 
 ## What's in it
 
-`clang`, `ld.lld`, `llvm-ar`, `llvm-ranlib`, `llvm-rc`, `llvm-objcopy`, `llvm-strip`, `llvm-objdump`, `llvm-readobj`, `llvm-readelf`, `llvm-nm`, `llvm-size`, `llvm-symbolizer`, `llvm-addr2line`, `llvm-mc`, and clang's headers. Release build with assertions on, since the SuperH backend is experimental and the Windows CE ARM ABI is new: a compiler bug stops with an error instead of producing bad code.
+`clang`, `ld.lld`, `llvm-ar`, `llvm-ranlib`, `llvm-rc`, `llvm-objcopy`, `llvm-strip`, `llvm-objdump`, `llvm-readobj`, `llvm-readelf`, `llvm-nm`, `llvm-size`, `llvm-symbolizer`, `llvm-addr2line`, `llvm-mc`, and clang's headers. From v3, also libc++'s headers (`include/c++/v1`) and sources (`share/libcxx/src`), which jornada-72x-tools uses for C++ standard library support with its own configuration. Release build with assertions on, since the SuperH backend is experimental and the Windows CE ARM ABI is new: a compiler bug stops with an error instead of producing bad code.
 
 ## Building a release
 
