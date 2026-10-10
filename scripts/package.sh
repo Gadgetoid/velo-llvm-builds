@@ -23,7 +23,8 @@ cp -R "$build_dir/lib/clang" "$staging/lib/clang"
 cp "$source_dir/llvm/LICENSE.TXT" "$staging/LICENSE.TXT"
 commit="$(git -C "$source_dir" rev-parse HEAD)"
 cat > "$staging/README.txt" <<README
-LLVM with the SuperH (SH-3, Windows CE) and MIPS targets, for velo-toolchain.
+LLVM with the SuperH (SH-3, Windows CE), ARM (Windows CE) and MIPS targets,
+for velo-toolchain and jornada-72x-tools.
 
 Built from https://github.com/Gadgetoid/llvm-project
 commit $commit
@@ -40,6 +41,8 @@ done
 printf '#include <stdarg.h>\nint pick(int count, ...) { va_list list; va_start(list, count); int value = va_arg(list, int); va_end(list); return value; }\n' > "$output_dir/check.c"
 "$staging/bin/clang" --target=sh3el-unknown-none-wince -ffreestanding -c "$output_dir/check.c" -o "$output_dir/check.o"
 "$staging/bin/llvm-readelf" -h "$output_dir/check.o" | grep -q "Hitachi SH"
+"$staging/bin/clang" --target=armv4-unknown-none-wince -mcpu=strongarm -ffreestanding -c "$output_dir/check.c" -o "$output_dir/check.o"
+"$staging/bin/llvm-readelf" -h "$output_dir/check.o" | grep -q "ARM"
 "$staging/bin/ld.lld" --version > /dev/null
 rm -f "$output_dir/check.c" "$output_dir/check.o"
 tar -C "$output_dir" -cJf "$output_dir/$name.tar.xz" "$name"

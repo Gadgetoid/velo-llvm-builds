@@ -9,7 +9,7 @@ fi
 cmake -S "$source_dir/llvm" -B "$build_dir" -G Ninja \
     -DCMAKE_BUILD_TYPE=Release \
     -DLLVM_ENABLE_PROJECTS="clang;lld" \
-    -DLLVM_TARGETS_TO_BUILD=Mips \
+    -DLLVM_TARGETS_TO_BUILD="ARM;Mips" \
     -DLLVM_EXPERIMENTAL_TARGETS_TO_BUILD=SuperH \
     -DLLVM_ENABLE_ASSERTIONS=ON \
     -DLLVM_INCLUDE_TESTS=OFF \

@@ -5,7 +5,7 @@ on:
     inputs:
       ref:
         description: Gadgetoid/llvm-project commit, branch or tag to build
-        default: wince-sh3
+        default: wince-arm
   push:
     tags:
       - "v*"
@@ -87,4 +87,4 @@ jobs:
       - name: Publish the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "${{ github.ref_name }}" dist/* --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --notes "LLVM with SuperH (SH-3, Windows CE) and MIPS, built from Gadgetoid/llvm-project at $(cat LLVM_REF 2>/dev/null || echo the tagged ref). See README."
+        run: gh release create "${{ github.ref_name }}" dist/* --repo "${{ github.repository }}" --title "${{ github.ref_name }}" --notes "LLVM with SuperH (SH-3, Windows CE), ARM (Windows CE) and MIPS, built from Gadgetoid/llvm-project at $(cat LLVM_REF 2>/dev/null || echo the tagged ref). See README."
